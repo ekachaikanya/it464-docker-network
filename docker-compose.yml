@@ -1,0 +1,55 @@
+services:
+  frontend:
+    image: nginx:alpine
+    container_name: web-frontend
+    ports:
+      - "8086:80"
+    networks:
+      - frontend-net
+      - shared-net
+
+  backend:
+    # ใช้ image ทดสอบที่ตอบสนองได้จริง เพื่อให้เห็นว่า backend ทำงานอยู่
+    image: cloudnativelabs/whats-my-ip
+    container_name: api-backend
+    ports:
+      - "3001:8080"
+    networks:
+      - backend-net
+      - shared-net
+
+  database:
+    image: postgres:alpine
+    container_name: db-service
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_PASSWORD: password
+    networks:
+      - backend-net
+
+  # --- ส่วนที่ใช้ "แสดงผล" โครงสร้าง Network และ Backend บนหน้าเว็บ ---
+
+  # ... frontend, backend, database เดิม ...
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: docker-manager
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - frontend-net
+      - shared-net
+      - backend-net
+
+volumes:
+  portainer_data:
+
+networks:
+  frontend-net:
+  backend-net:
+  shared-net:
+    driver: bridge
